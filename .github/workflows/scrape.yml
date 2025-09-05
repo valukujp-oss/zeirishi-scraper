@@ -1,0 +1,28 @@
+name: shizuoka-scraper
+on:
+  schedule:
+    - cron: "30 5 * * *"   # 日本時間14:30（= UTC 05:30）
+  workflow_dispatch:
+    inputs:
+      pref:
+        description: "県名"
+        required: true
+        default: "静岡"
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install requests beautifulsoup4 lxml pandas openpyxl
+      - name: Run scraper
+        run: |
+          PREF="${{ github.event.inputs.pref || '静岡' }}"
+          python zeirishikensaku_scraper_template.py --pref "$PREF" --out "${PREF}_税理士リスト.xlsx"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: export-xlsx
+          path: "*.xlsx"
