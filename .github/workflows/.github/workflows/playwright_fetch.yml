@@ -1,0 +1,41 @@
+name: shizuoka-playwright
+on:
+  workflow_dispatch: {}
+
+# ← 同時実行でぶつからないように（前の実行が動いていれば自動でキャンセル）
+concurrency:
+  group: shizuoka-playwright
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Playwright (browser included)
+        run: |
+          pip install playwright
+          python -m playwright install --with-deps chromium
+
+      - name: Fetch page with headless browser
+        run: |
+          python zeirishikensaku_playwright.py
+
+      - name: Upload artifacts (HTML/PNG)
+        uses: actions/upload-artifact@v4
+        with:
+          # ← 各実行で固有名にして上書きを防止
+          name: export-files-${{ github.run_number }}
+          path: |
+            **/*.html
+            **/*.png
+          # ← 万一溜まりすぎ防止のため保存期間を設定（必要に応じて調整）
+          retention-days: 7
