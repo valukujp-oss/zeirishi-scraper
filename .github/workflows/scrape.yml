@@ -1,7 +1,7 @@
 name: shizuoka-scraper
 on:
   schedule:
-    - cron: "30 5 * * *"   # 日本時間14:30（= UTC 05:30）
+    - cron: "30 5 * * *"   # JST 14:30（= UTC 05:30）
   workflow_dispatch:
     inputs:
       pref:
@@ -21,8 +21,12 @@ jobs:
       - name: Run scraper
         run: |
           PREF="${{ github.event.inputs.pref || '静岡' }}"
-          python zeirishikensaku_scraper_template.py --pref "$PREF" --out "${PREF}_税理士リスト.xlsx"
+          # ▼ デバッグONにしてHTMLも出力
+          python zeirishikensaku_scraper_template.py --pref "$PREF" --out "${PREF}_税理士リスト.xlsx" --debug
       - uses: actions/upload-artifact@v4
         with:
-          name: export-xlsx
-          path: "*.xlsx"
+          name: export-files
+          # ▼ xlsx が無くても debug HTML を必ず拾う
+          path: |
+            **/*.xlsx
+            **/debug_*.html
